@@ -125,6 +125,6 @@ func main() {
 		Blockchain = append(Blockchain, genesisBlock)
 		json.NewEncoder(w).Encode(Blockchain)
 
-	}(w, &r)
+	}
 	handleRequest()
 }
