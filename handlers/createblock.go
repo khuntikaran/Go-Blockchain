@@ -1,14 +1,17 @@
 package handlers
 
 import (
-	"blockchain/chain"
+	"blockchain/chainS"
 	"blockchain/models"
 	"blockchain/repository"
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/davecgh/go-spew/spew"
 )
+
+var mutex = &sync.Mutex{}
 
 type Message struct {
 	Productname string
@@ -24,7 +27,7 @@ func CreateBlock(w http.ResponseWriter, r *http.Request) {
 	var m models.Product
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
-		chain.RespondWithJSON(w, r, http.StatusBadRequest, r.Body)
+		chainS.RespondWithJSON(w, r, http.StatusBadRequest, r.Body)
 		return
 	}
 	defer r.Body.Close()
@@ -38,18 +41,19 @@ func CreateBlock(w http.ResponseWriter, r *http.Request) {
 		Description: m.Description,
 	}
 	//product := models.Product{}
-	newBlock, err := chain.GenerateBlock(chain.Blockchain[len(chain.Blockchain)-1], models.Product(product))
-
+	mutex.Lock()
+	newBlock, err := chainS.GenerateBlock(chainS.Blockchain[len(chainS.Blockchain)-1], models.Product(product))
+	mutex.Unlock()
 	if err != nil {
-		chain.RespondWithJSON(w, r, http.StatusInternalServerError, m)
+		chainS.RespondWithJSON(w, r, http.StatusInternalServerError, m)
 		return
 	}
-	if chain.IsBlockValid(newBlock, chain.Blockchain[len(chain.Blockchain)-1]) {
-		newBlockchain := append(chain.Blockchain, newBlock)
-		chain.ReplaceChain(newBlockchain)
-		spew.Dump(chain.Blockchain)
+	if chainS.IsBlockValid(newBlock, chainS.Blockchain[len(chainS.Blockchain)-1]) {
+		newBlockchain := append(chainS.Blockchain, newBlock)
+		chainS.ReplaceChain(newBlockchain)
+		spew.Dump(chainS.Blockchain)
 	}
 	repository.AddBlock(newBlock)
-	chain.RespondWithJSON(w, r, http.StatusCreated, newBlock)
+	chainS.RespondWithJSON(w, r, http.StatusCreated, newBlock)
 
 }

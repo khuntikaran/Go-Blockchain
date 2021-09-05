@@ -1,7 +1,7 @@
 package main
 
 import (
-	"blockchain/chain"
+	"blockchain/chainS"
 	"blockchain/handlers"
 	"log"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	chain.Init()
+	chainS.Init()
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/blockchain", handlers.GetBlockchain).Methods("GET")
 	router.HandleFunc("/add", handlers.CreateBlock).Methods("POST")
